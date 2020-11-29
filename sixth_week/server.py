@@ -2,7 +2,6 @@ import asyncio
 import collections
 
 
-
 class ClientServerProtocol(asyncio.Protocol):
     STORAGE = collections.OrderedDict()
 
