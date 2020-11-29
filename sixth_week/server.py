@@ -1,10 +1,11 @@
 import asyncio
 import collections
 
-STORAGE = collections.OrderedDict()
 
 
 class ClientServerProtocol(asyncio.Protocol):
+    STORAGE = collections.OrderedDict()
+
     def connection_made(self, transport):
         self.transport = transport
 
