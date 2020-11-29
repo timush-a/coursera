@@ -17,7 +17,7 @@ class Client():
     of the Client class, and an optional timeout argument.
     The connection to the server is established
     when an instance of the Client class is created
-    and does not break between requests
+    and does not break between requests.
     """
     def __init__(self, host, port, timeout=None):
         self.host = host
@@ -91,15 +91,3 @@ class Client():
             raise ClientError
 
         return self.data
-
-try:
-    responce = [a.split(" ") for a in resp2[3:-4].split("\n")]
-    for metric in responce:
-        try:
-            if data[metric[0]]:
-                data[metric[0]].append((int(metric[2]), float(metric[1])))
-                data[metric[0]].sort(key=lambda x: (x[0], x[1]))
-        except KeyError:
-            data[metric[0]] = [(int(metric[2]), float(metric[1]))]
-except (IndexError, ValueError):
-    raise ClientError
