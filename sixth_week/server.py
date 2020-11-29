@@ -2,8 +2,8 @@ import asyncio
 import collections
 
 
-class ClientServerProtocol(asyncio.Protocol):
-    STORAGE = collections.OrderedDict()
+class ServerProtocol(asyncio.Protocol):
+    storage = collections.OrderedDict()
 
     def connection_made(self, transport):
         self.transport = transport
@@ -31,7 +31,7 @@ class ClientServerProtocol(asyncio.Protocol):
     def _get(self):
         try:
             self.metric_name = self.data.split(' ')[1]
-        except (IndexError):
+        except IndexError:
             return 'error\nwrong command\n\n'
 
         if len(self.data.split(' ')) != 2:
@@ -54,9 +54,9 @@ class ClientServerProtocol(asyncio.Protocol):
     def _return_metrics(self):
         result = 'ok\n'
         if self.metric_name == '*':
-            if len(STORAGE) > 0:
-                for key in STORAGE:
-                    for metric in STORAGE[key]:
+            if len(ServerProtocol.storage) > 0:
+                for key in ServerProtocol.storage:
+                    for metric in ServerProtocol.storage[key]:
                         result += f"{key} {' '.join(metric)}\n"
                 return result + '\n'
             else:
@@ -64,36 +64,37 @@ class ClientServerProtocol(asyncio.Protocol):
 
         else:
             try:
-                STORAGE[self.metric_name]
+                ServerProtocol.storage[self.metric_name]
             except KeyError:
                 return 'ok\n\n'
             else:
-                for value in STORAGE[self.metric_name]:
+                for value in ServerProtocol.storage[self.metric_name]:
                     result += f"{self.metric_name} {' '.join(value)}\n"
                 return result + '\n'
 
     def _save_metrics(self):
-        if self.metric_name not in STORAGE:
-            STORAGE[self.metric_name] = []
-            STORAGE[self.metric_name].append(
+        if self.metric_name not in ServerProtocol.storage:
+            ServerProtocol.storage[self.metric_name] = []
+            ServerProtocol.storage[self.metric_name].append(
                     [self.metric_value, self.timestamp])
             return 'ok\n\n'
 
-        elif [self.metric_value, self.timestamp] in STORAGE[self.metric_name]:
+        elif ([self.metric_value, self.timestamp] in
+              ServerProtocol.storage[self.metric_name]):
             return 'ok\n\n'
 
         else:
-            for value in STORAGE[self.metric_name]:
+            for value in ServerProtocol.storage[self.metric_name]:
                 if value[1] == self.timestamp:
-                    STORAGE[self.metric_name].remove([value[0], value[1]])
-            STORAGE[self.metric_name].append(
+                    ServerProtocol.storage[self.metric_name].remove([value[0], value[1]])
+            ServerProtocol.storage[self.metric_name].append(
                 [self.metric_value, self.timestamp])
             return 'ok\n\n'
 
 
 def run_server(host, port):
     loop = asyncio.get_event_loop()
-    coro = loop.create_server(ClientServerProtocol, host, port)
+    coro = loop.create_server(ServerProtocol, host, port)
     server = loop.run_until_complete(coro)
 
     try:
@@ -104,3 +105,7 @@ def run_server(host, port):
     server.close()
     loop.run_until_complete(server.wait_closed())
     loop.close()
+
+
+if __name__ == "__main__":
+    run_server('127.0.0.1', 8888)
