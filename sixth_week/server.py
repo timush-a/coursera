@@ -45,7 +45,8 @@ class ServerProtocol(asyncio.Protocol):
             self.metric_name = self.data.split(' ')[1]
             self.metric_value = str(float(self.data.split(' ')[2]))
             self.timestamp = str(int(self.data.split(' ')[3]))
-            assert len(self.data.split(' ')) == 4
+            if len(self.data.split(' ')) != 4:
+                raise ValueError
         except (IndexError, AssertionError, ValueError):
             return 'error\nwrong command\n\n'
         else:
